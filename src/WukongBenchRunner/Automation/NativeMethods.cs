@@ -100,6 +100,14 @@ internal static partial class NativeMethods
     [return: MarshalAs(UnmanagedType.Bool)]
     public static partial bool IsWindowVisible(nint hWnd);
 
+    /// <summary>PrintWindow flag: capture DirectX/DWM-composed content (Windows 8.1+).</summary>
+    public const uint PW_RENDERFULLCONTENT = 0x00000002;
+    public const uint PW_CLIENTONLY = 0x00000001;
+
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool PrintWindow(nint hwnd, nint hdcBlt, uint nFlags);
+
     public const uint INPUT_MOUSE = 0;
     public const uint MOUSEEVENTF_LEFTDOWN = 0x0002;
     public const uint MOUSEEVENTF_LEFTUP = 0x0004;

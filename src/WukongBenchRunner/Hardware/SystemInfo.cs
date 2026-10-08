@@ -50,7 +50,7 @@ public static class SystemInfoCollector
             RamDetails: ramDetails,
             Gpus: CollectGpus(),
             Displays: CollectDisplays(),
-            Os: $"{Str(os?["Caption"])} {Str(os?["Version"])} (build {Str(os?["BuildNumber"])})".Trim(),
+            Os: $"{Str(os?["Caption"])} {Str(os?["Version"])}".Trim(),
             Motherboard: board is null ? null : $"{Str(board["Manufacturer"])} {Str(board["Product"])}".Trim(),
             PowerSource: CollectPowerSource(),
             PowerPlan: CollectPowerPlan());

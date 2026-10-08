@@ -13,6 +13,8 @@ public sealed record CliOptions
     public (int Width, int Height)? CpuWindow { get; init; }
     public bool CpuBorderless { get; init; }
     public int? CpuScale { get; init; }
+    /// <summary>Full ray tracing level for the GPU pass; "off" disables it, null keeps the automatic choice.</summary>
+    public string? GpuRt { get; init; }
 
     public const string Usage = """
         WukongBenchRunner — runs Black Myth: Wukong Benchmark Tool twice (CPU- and GPU-bound settings)
@@ -30,6 +32,8 @@ public sealed record CliOptions
                               "desktop" runs it borderless at desktop resolution
           --cpu-scale <25-100>
                               Render scale of the CPU pass in percent (default 25)
+          --gpu-rt <off|low|medium|ultra>
+                              Full ray tracing level of the GPU pass (default: chosen automatically)
           -h, --help          Show this help
         """;
 
@@ -55,6 +59,11 @@ public sealed record CliOptions
                 {
                     var v when v.Equals("desktop", StringComparison.OrdinalIgnoreCase) => o with { CpuBorderless = true },
                     var v => o with { CpuWindow = ParseSize(v) },
+                },
+                "--gpu-rt" => Value().ToLowerInvariant() switch
+                {
+                    var v and ("off" or "low" or "medium" or "ultra") => o with { GpuRt = v },
+                    var v => throw new ArgumentException($"--gpu-rt expects off, low, medium or ultra, got '{v}'"),
                 },
                 "--cpu-scale" => int.TryParse(Value(), out var s) && s is >= 25 and <= 100
                     ? o with { CpuScale = s }

@@ -110,8 +110,9 @@ public sealed class BenchmarkRunner(GamePaths paths, RunnerOptions options)
     /// ignored until the title screen is up.
     /// <para>
     /// Start detection: after "Confirm" the game switches to a pure black loading screen and rewrites
-    /// GameUserSettings.ini. The game also writes the file and shows black frames while it boots, so clicking
-    /// only begins once a normal (bright) frame — title, menu or shader compilation — has been seen.
+    /// GameUserSettings.ini. While it boots the game also writes that file and shows ~20 s of black frames
+    /// (and a freshly created window can flash white), so clicking only begins once the window has shown a
+    /// normal picture — title, menu or shader compilation — for several consecutive checks.
     /// </para>
     /// </summary>
     private void StartBenchmark(Process process, BenchmarkProfile profile, CancellationToken ct)
@@ -119,7 +120,7 @@ public sealed class BenchmarkRunner(GamePaths paths, RunnerOptions options)
         Log.Step($"[{profile.Name}] Starting the benchmark from the main menu...");
         var sw = Stopwatch.StartNew();
         var attempt = 0;
-        var sawBrightFrame = false;
+        var brightStreak = 0;
         while (sw.Elapsed < options.StartTimeout)
         {
             ct.ThrowIfCancellationRequested();
@@ -127,14 +128,11 @@ public sealed class BenchmarkRunner(GamePaths paths, RunnerOptions options)
             var hwnd = process.MainWindowHandle;
             GameInput.BringToFront(hwnd);
 
-            if (!sawBrightFrame)
+            if (brightStreak < 3)
             {
-                sawBrightFrame = ScreenProbe.MeanLuma(hwnd) > ScreenProbe.BrightThreshold;
-                if (!sawBrightFrame)
-                {
-                    Sleep(1000, ct);
-                    continue;
-                }
+                brightStreak = ScreenProbe.MeanLuma(hwnd) > ScreenProbe.BrightThreshold ? brightStreak + 1 : 0;
+                Sleep(1000, ct);
+                continue;
             }
 
             attempt++;

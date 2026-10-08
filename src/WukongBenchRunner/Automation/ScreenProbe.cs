@@ -15,21 +15,34 @@ internal static class ScreenProbe
     public const double DarkThreshold = 4;
     public const double BrightThreshold = 8;
 
-    /// <summary>Average luma (0..255) of the window's client area, or null if it cannot be captured.</summary>
+    /// <summary>
+    /// Average luma (0..255) of the window's client area, or null if it cannot be captured.
+    /// The window itself is captured (PrintWindow), not the screen region, so other windows that
+    /// overlap it — e.g. while the game is still starting up — cannot affect the measurement.
+    /// </summary>
     public static double? MeanLuma(nint hwnd)
     {
         if (!GetClientRect(hwnd, out var rc)) return null;
         int w = rc.Right - rc.Left, h = rc.Bottom - rc.Top;
         if (w <= 0 || h <= 0) return null;
-        var origin = new POINT();
-        ClientToScreen(hwnd, ref origin);
 
         try
         {
             using var bmp = new Bitmap(w, h, PixelFormat.Format32bppArgb);
+            bool ok;
             using (var g = Graphics.FromImage(bmp))
-                g.CopyFromScreen(origin.X, origin.Y, 0, 0, new Size(w, h));
-            return MeanLuma(bmp, step: 8);
+            {
+                var hdc = g.GetHdc();
+                try
+                {
+                    ok = PrintWindow(hwnd, hdc, PW_CLIENTONLY | PW_RENDERFULLCONTENT);
+                }
+                finally
+                {
+                    g.ReleaseHdc(hdc);
+                }
+            }
+            return ok ? MeanLuma(bmp, step: 8) : null;
         }
         catch (Exception e) when (e is System.ComponentModel.Win32Exception or ExternalException or ArgumentException)
         {

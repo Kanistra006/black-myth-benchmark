@@ -72,7 +72,21 @@ if (cli.RunCpu)
     if (cli.CpuScale is { } scale) cpu = cpu with { ResolutionScale = scale };
     profiles.Add(cpu);
 }
-if (cli.RunGpu) profiles.Add(BenchmarkProfile.Gpu(rtSupported));
+if (cli.RunGpu)
+{
+    var gpu = BenchmarkProfile.Gpu(rtSupported);
+    gpu = cli.GpuRt switch
+    {
+        null => gpu,
+        "off" => gpu with { RayTracing = false },
+        var level => gpu with
+        {
+            RayTracing = rtSupported,
+            RayTracingLevel = level switch { "low" => RayTracingLevel.Low, "medium" => RayTracingLevel.Medium, _ => RayTracingLevel.Ultra },
+        },
+    };
+    profiles.Add(gpu);
+}
 
 // Back up the user's settings; they are restored whatever happens.
 var backup = Path.Combine(outputDir, "GameUserSettings.backup.ini");
@@ -95,7 +109,17 @@ try
         var (w, h) = profile.Display == DisplayMode.Windowed && profile.WindowSize is { } ws
             ? ws
             : (primary.Width, primary.Height);
-        var result = runner.Run(profile, w, h, cts.Token);
+        PassResult result;
+        try
+        {
+            result = runner.Run(profile, w, h, cts.Token);
+        }
+        catch (TimeoutException e)
+        {
+            // A missed click or a slow first start: one clean retry from a fresh game launch.
+            Log.Warn($"[{profile.Name}] {e.Message} Retrying the pass once...");
+            result = runner.Run(profile, w, h, cts.Token);
+        }
         passes.Add(result);
         Log.Step($"[{profile.Name}] Average {result.Metrics.AvgFps} FPS, 5th percentile {result.Metrics.Percentile5Fps} FPS");
     }

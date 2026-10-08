@@ -96,7 +96,8 @@ public static class ReportWriter
             var cells = Enumerable.Range(0, cols).Select(c =>
             {
                 var v = c < rows[i].Length ? rows[i][c] : "";
-                return " " + (c == 0 ? v.PadRight(widths[c]) : v.PadLeft(widths[c])) + " ";
+                // Numbers in the results table are right-aligned, text everywhere else left-aligned.
+                return " " + (c > 0 && hasHeader ? v.PadLeft(widths[c]) : v.PadRight(widths[c])) + " ";
             });
             Console.WriteLine("│" + string.Join("│", cells) + "│");
             if (hasHeader && i == 0) Console.WriteLine(Line('├', '┼', '┤'));
@@ -117,10 +118,11 @@ public static class ReportWriter
             sb.AppendLine();
             sb.AppendLine($"## {title}");
             sb.AppendLine();
-            var header = title == "Результаты" ? rows[0] : new[] { "Параметр", "Значение" };
-            var body = title == "Результаты" ? rows.Skip(1) : rows;
+            var isResults = title == "Результаты";
+            var header = isResults ? rows[0] : new[] { "Параметр", "Значение" };
+            var body = isResults ? rows.Skip(1) : rows;
             sb.AppendLine("| " + string.Join(" | ", header) + " |");
-            sb.AppendLine("|" + string.Join("|", header.Select((_, i) => i == 0 ? "---" : "---:")) + "|");
+            sb.AppendLine("|" + string.Join("|", header.Select((_, i) => i > 0 && isResults ? "---:" : "---")) + "|");
             foreach (var row in body) sb.AppendLine("| " + string.Join(" | ", row.Select(Escape)) + " |");
         }
         sb.AppendLine();
