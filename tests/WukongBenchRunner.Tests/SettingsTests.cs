@@ -89,7 +89,7 @@ public class SettingsTests
     {
         var ini = IniDocument.Parse(FixtureIni);
 
-        GameSettingsWriter.Apply(ini, BenchmarkProfile.Gpu(rayTracingSupported: true), 2560, 1440);
+        GameSettingsWriter.Apply(ini, BenchmarkProfile.Gpu(rayTracing: true, RayTracingLevel.Ultra), 2560, 1440);
 
         var ui = UiSettingData.Parse(ini.Get(GameSettingsWriter.MainSection, "UISettingData"));
         Assert.Equal("5", ui["QualityLevel"]);
@@ -102,6 +102,36 @@ public class SettingsTests
         Assert.Equal("100", ini.Get("ScalabilityGroups", "sg.ResolutionQuality"));
         Assert.All(GameSettingsWriter.ScalabilityKeys, k => Assert.Equal("4", ini.Get("ScalabilityGroups", k)));
         Assert.Equal("True", ini.Get("RayTracing", "r.RayTracing.EnableInGame"));
+    }
+
+    [Theory]
+    [InlineData("NVIDIA GeForce RTX 4090", 24.0, true, RayTracingLevel.Ultra)]
+    [InlineData("NVIDIA GeForce RTX 4070", 12.0, true, RayTracingLevel.Ultra)]
+    [InlineData("NVIDIA GeForce RTX 4060 Laptop GPU", 8.0, true, RayTracingLevel.Medium)]
+    [InlineData("NVIDIA GeForce RTX 3050", 6.0, false, RayTracingLevel.Low)]
+    [InlineData("AMD Radeon RX 7900 XTX", 24.0, false, RayTracingLevel.Low)]
+    [InlineData("NVIDIA GeForce GTX 1080 Ti", 11.0, false, RayTracingLevel.Low)]
+    public void Selector_PicksRayTracingByVendorAndVram(string gpu, double vram, bool rt, RayTracingLevel level)
+    {
+        var gpus = new List<Hardware.GpuInfo>
+        {
+            new("Intel(R) UHD Graphics", "1", 1, null),
+            new(gpu, "1", vram, null),
+        };
+
+        var choice = GpuProfileSelector.ChooseRayTracing(gpus);
+
+        Assert.Equal(rt, choice.RayTracing);
+        if (rt) Assert.Equal(level, choice.Level);
+    }
+
+    [Theory]
+    [InlineData(7.6, 8.0, true)]
+    [InlineData(7.2, 8.0, false)]
+    [InlineData(7.6, null, false)]
+    public void Selector_DetectsSaturatedVram(double used, double? total, bool expected)
+    {
+        Assert.Equal(expected, GpuProfileSelector.VramSaturated(used, total));
     }
 
     [Fact]

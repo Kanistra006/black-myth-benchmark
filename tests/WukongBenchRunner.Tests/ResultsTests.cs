@@ -50,6 +50,22 @@ public class ResultsTests
         Assert.Equal(0.75, m.CpuBoundShare);
     }
 
+    [Fact]
+    public void Report_ShowsSettingsReportedByTheGame()
+    {
+        var raw = BenchmarkHistoryFile.Parse(Sample.Replace("\"Rtx\":0,\"Dlss\":0", "\"Rtx\":2,\"Dlss\":3"));
+        var profile = Settings.BenchmarkProfile.Gpu(true, Settings.RayTracingLevel.Medium);
+        var load = new Hardware.LoadSummary(10, 50, 90, 99, 1450, 40, 90);
+        var pass = new Automation.PassResult(profile, 2560, 1440, "file", raw, PassMetrics.From(raw), load);
+
+        var rows = Report.ReportBuilder.FromPass(pass).Settings.ToDictionary(r => r.Name, r => r.Value);
+
+        Assert.StartsWith("Вкл., средний (игра: Вкл., средний)", rows["Полная трассировка лучей"]);
+        Assert.Equal("Unreal TSR (игра: Unreal TSR)", rows["Апскейлер"]);
+        Assert.Equal("Выкл. (игра: Выкл.)", rows["Генерация кадров"]);
+        Assert.Equal("100% → 2560x1440 (игра: 25%)", rows["Масштаб рендера"]);
+    }
+
     [Theory]
     [InlineData(0.01, 1)]
     [InlineData(0.5, 50)]

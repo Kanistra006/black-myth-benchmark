@@ -57,9 +57,6 @@ Directory.CreateDirectory(outputDir);
 Log.Step("Collecting system information...");
 var system = SystemInfoCollector.Collect();
 var primary = System.Windows.Forms.Screen.PrimaryScreen!.Bounds;
-var rtSupported = system.Gpus.Any(g => g.Name.Contains("NVIDIA", StringComparison.OrdinalIgnoreCase) &&
-                                       g.Name.Contains("RTX", StringComparison.OrdinalIgnoreCase));
-if (!rtSupported) Log.Warn("No NVIDIA RTX GPU found: full ray tracing is NVIDIA-only in this benchmark, the GPU pass runs without it.");
 if (!system.PowerSource.StartsWith("AC", StringComparison.Ordinal))
     Log.Warn($"Power source: {system.PowerSource}. Laptops are much slower on battery; connect the charger for meaningful results.");
 
@@ -74,18 +71,21 @@ if (cli.RunCpu)
 }
 if (cli.RunGpu)
 {
-    var gpu = BenchmarkProfile.Gpu(rtSupported);
-    gpu = cli.GpuRt switch
+    var rt = GpuProfileSelector.ChooseRayTracing(system.Gpus);
+    var gpu = BenchmarkProfile.Gpu(rt.RayTracing, rt.Level);
+    if (cli.GpuRt is { } forced)
     {
-        null => gpu,
-        "off" => gpu with { RayTracing = false },
-        var level => gpu with
-        {
-            RayTracing = rtSupported,
-            RayTracingLevel = level switch { "low" => RayTracingLevel.Low, "medium" => RayTracingLevel.Medium, _ => RayTracingLevel.Ultra },
-        },
-    };
-    profiles.Add(gpu);
+        gpu = forced == "off"
+            ? gpu with { RayTracing = false }
+            : gpu with
+            {
+                RayTracing = true,
+                RayTracingLevel = forced switch { "low" => RayTracingLevel.Low, "medium" => RayTracingLevel.Medium, _ => RayTracingLevel.Ultra },
+            };
+        rt = rt with { Reason = "задано параметром --gpu-rt" };
+    }
+    Log.Info($"GPU pass ray tracing: {(gpu.RayTracing ? gpu.RayTracingLevel.ToString() : "off")} ({rt.Reason})");
+    profiles.Add(gpu with { RayTracingReason = rt.Reason });
 }
 
 // Back up the user's settings; they are restored whatever happens.

@@ -49,6 +49,8 @@ public sealed record BenchmarkProfile
     public required bool FrameGeneration { get; init; }
     public required bool RayTracing { get; init; }
     public required RayTracingLevel RayTracingLevel { get; init; }
+    /// <summary>Why this ray tracing setting was chosen (shown in the report).</summary>
+    public string? RayTracingReason { get; init; }
 
     /// <summary>
     /// CPU pass: everything that scales with pixels or GPU features is at its minimum,
@@ -68,17 +70,17 @@ public sealed record BenchmarkProfile
     };
 
     /// <summary>
-    /// GPU pass: native resolution, the highest preset and full ray tracing at its top level,
-    /// which puts the maximum possible load on the GPU.
+    /// GPU pass: native resolution without upscaling, the highest preset and full ray tracing at the
+    /// highest level that still fits into VRAM (see <see cref="GpuProfileSelector"/>).
     /// </summary>
-    public static BenchmarkProfile Gpu(bool rayTracingSupported) => new()
+    public static BenchmarkProfile Gpu(bool rayTracing, RayTracingLevel level) => new()
     {
         Name = "GPU",
         Quality = Quality.Cinematic,
         ResolutionScale = 100,
         Upscaler = Upscaler.Tsr,
         FrameGeneration = false,
-        RayTracing = rayTracingSupported,
-        RayTracingLevel = RayTracingLevel.Ultra,
+        RayTracing = rayTracing,
+        RayTracingLevel = level,
     };
 }
