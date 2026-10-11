@@ -14,7 +14,7 @@ public static partial class GameLocator
             return GamePaths.FromInstallDir(overrideDir);
 
         var steam = FindSteamPath()
-            ?? throw new InvalidOperationException("Steam installation not found. Pass --game-dir explicitly.");
+            ?? throw new InvalidOperationException("Steam не найден. Укажите папку бенчмарка параметром --game-dir.");
 
         foreach (var library in EnumerateLibraries(steam))
         {
@@ -27,7 +27,8 @@ public static partial class GameLocator
         }
 
         throw new InvalidOperationException(
-            $"Benchmark Tool (Steam AppID {SteamAppId}) is not installed. Install it from Steam or pass --game-dir.");
+            $"Black Myth: Wukong Benchmark Tool (Steam AppID {SteamAppId}) не установлен. " +
+            "Установите его в Steam или укажите папку параметром --game-dir.");
     }
 
     private static string? FindSteamPath()
@@ -67,7 +68,7 @@ public sealed record GamePaths(string InstallDir)
     {
         var paths = new GamePaths(Path.GetFullPath(dir));
         if (!File.Exists(paths.GameExe))
-            throw new FileNotFoundException($"Benchmark executable not found in '{dir}'.", paths.GameExe);
+            throw new FileNotFoundException($"В папке '{dir}' нет исполняемого файла бенчмарка.", paths.GameExe);
         return paths;
     }
 }

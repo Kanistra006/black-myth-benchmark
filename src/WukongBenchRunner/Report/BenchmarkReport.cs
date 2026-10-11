@@ -48,12 +48,14 @@ public static class ReportBuilder
                 $"{QualityName(p.Quality)} (игра: {DetailSummary(raw)})"),
             // The result file stores the full ray tracing level in "Rtx": 0 = off, 1..3 = Low..Ultra.
             new("Полная трассировка лучей",
-                RtSetting(p.RayTracing, p.RayTracingLevel) +
-                $" (игра: {RtSetting(raw.Rtx > 0, (RayTracingLevel)raw.Rtx)})" +
-                (p.RayTracingReason is null ? "" : $" — {p.RayTracingReason}")),
+                RtSetting(p.RayTracing, p.RayTracingLevel) + $" (игра: {RtSetting(raw.Rtx > 0, (RayTracingLevel)raw.Rtx)})"),
             new("Генерация кадров", $"{OnOff(p.FrameGeneration)} (игра: {OnOff(raw.InsertFrame == 1)})"),
             new("Вертикальная синхронизация / лимит FPS", "Выкл. / без лимита"),
         };
+
+        if (p.RayTracingReason is not null)
+            settings.Insert(settings.FindIndex(r => r.Name == "Полная трассировка лучей") + 1,
+                new("Выбор уровня трассировки", p.RayTracingReason));
 
         if (GpuProfileSelector.VramSaturated(raw.VideoMem, ParseGb(raw.VideoMemSize)))
             settings.Add(new("Внимание", $"использовано {raw.VideoMem:0.0} ГБ из {raw.VideoMemSize} видеопамяти — " +

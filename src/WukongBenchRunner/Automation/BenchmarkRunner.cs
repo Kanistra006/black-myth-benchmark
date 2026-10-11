@@ -39,7 +39,7 @@ public sealed class BenchmarkRunner(GamePaths paths, RunnerOptions options)
     {
         CloseGame();
 
-        Log.Step($"[{profile.Name}] Applying settings to {paths.GameUserSettingsIni}");
+        Log.Info("Применяю настройки теста...");
         var ini = IniDocument.Load(paths.GameUserSettingsIni);
         GameSettingsWriter.Apply(ini, profile, outputWidth, outputHeight);
         ini.Save(paths.GameUserSettingsIni);
@@ -59,7 +59,7 @@ public sealed class BenchmarkRunner(GamePaths paths, RunnerOptions options)
                 load = monitor.Stop();
             }
 
-            Log.Step($"[{profile.Name}] Result file: {file}");
+            Log.Info("Тест завершён, читаю результаты.");
             var raw = ReadResultFile(file, ct);
             return new PassResult(profile, outputWidth, outputHeight, file, raw, PassMetrics.From(raw), load);
         }
@@ -75,19 +75,19 @@ public sealed class BenchmarkRunner(GamePaths paths, RunnerOptions options)
         {
             // Launching through Steam avoids the "launch with custom parameters" prompt
             // Steam shows when the game's bootstrapper is started directly.
-            Log.Info($"Launching via steam://rungameid/{GameLocator.SteamAppId}");
+            Log.Info("Запускаю бенчмарк через Steam...");
             Process.Start(new ProcessStartInfo($"steam://rungameid/{GameLocator.SteamAppId}") { UseShellExecute = true });
         }
         else
         {
-            Log.Info($"Launching {paths.GameExe}");
+            Log.Info($"Запускаю {paths.GameExe}...");
             Process.Start(new ProcessStartInfo(paths.GameExe) { UseShellExecute = true, WorkingDirectory = Path.GetDirectoryName(paths.GameExe)! });
         }
     }
 
     private Process WaitForGameWindow(CancellationToken ct)
     {
-        Log.Info("Waiting for the game window...");
+        Log.Info("Жду окно игры...");
         var sw = Stopwatch.StartNew();
         while (sw.Elapsed < TimeSpan.FromMinutes(3))
         {
@@ -100,7 +100,7 @@ public sealed class BenchmarkRunner(GamePaths paths, RunnerOptions options)
             }
             Thread.Sleep(1000);
         }
-        throw new TimeoutException("The game window did not appear within 3 minutes. Is Steam running and logged in?");
+        throw new TimeoutException("Окно игры не появилось за 3 минуты. Проверьте, что Steam запущен и вы вошли в аккаунт.");
     }
 
     /// <summary>
@@ -117,7 +117,7 @@ public sealed class BenchmarkRunner(GamePaths paths, RunnerOptions options)
     /// </summary>
     private void StartBenchmark(Process process, BenchmarkProfile profile, CancellationToken ct)
     {
-        Log.Step($"[{profile.Name}] Starting the benchmark from the main menu...");
+        Log.Info("Игра запущена, прохожу меню и запускаю тест...");
         var sw = Stopwatch.StartNew();
         var attempt = 0;
         var brightStreak = 0;
@@ -154,20 +154,22 @@ public sealed class BenchmarkRunner(GamePaths paths, RunnerOptions options)
                 iniWritten |= File.GetLastWriteTimeUtc(paths.GameUserSettingsIni) > iniBefore;
                 if (darkFrames > 0 && iniWritten || darkFrames >= 4)
                 {
-                    Log.Info($"Benchmark started (attempt {attempt}, {sw.Elapsed.TotalSeconds:F0}s after the window appeared).");
+                    Log.Info($"Тест запущен (попытка {attempt}, через {sw.Elapsed.TotalSeconds:F0} с после появления окна).");
                     return;
                 }
             }
 
             if (attempt % 5 == 0)
-                Log.Info($"Still waiting for the main menu ({sw.Elapsed.TotalSeconds:F0}s; the first launch compiles shaders)...");
+                Log.Info($"Главное меню ещё не готово ({sw.Elapsed.TotalSeconds:F0} с; при первом запуске игра компилирует шейдеры)...");
         }
-        throw new TimeoutException($"Could not start the benchmark within {options.StartTimeout.TotalMinutes:F0} minutes.");
+        throw new TimeoutException($"Не удалось запустить тест за {options.StartTimeout.TotalMinutes:F0} мин.");
     }
 
     private string WaitForResult(Process process, HashSet<string> knownResults, CancellationToken ct)
     {
-        Log.Info("Benchmark is running, waiting for results (about 2-3 minutes)...");
+        // Loading (~15 s) plus the fixed 142-second camera run of the benchmark scene.
+        const int expectedSec = 160;
+        Log.Info($"Тест идёт, ждём результаты (около {expectedSec / 60} мин {expectedSec % 60} с)...");
         var sw = Stopwatch.StartNew();
         var lastReport = TimeSpan.Zero;
         while (sw.Elapsed < options.PassTimeout)
@@ -180,11 +182,11 @@ public sealed class BenchmarkRunner(GamePaths paths, RunnerOptions options)
             if (sw.Elapsed - lastReport >= TimeSpan.FromSeconds(30))
             {
                 lastReport = sw.Elapsed;
-                Log.Info($"  ...{sw.Elapsed.TotalSeconds:F0}s");
+                Log.Info($"  прошло {sw.Elapsed.TotalSeconds:F0} с из ~{expectedSec} с");
             }
             Sleep(2000, ct);
         }
-        throw new TimeoutException($"No result file appeared in {HistoryDir} within {options.PassTimeout.TotalMinutes:F0} minutes.");
+        throw new TimeoutException($"Результаты не появились в {HistoryDir} за {options.PassTimeout.TotalMinutes:F0} мин.");
     }
 
     /// <summary>The game may still be writing the file when it first appears; retry until it parses.</summary>
@@ -211,8 +213,9 @@ public sealed class BenchmarkRunner(GamePaths paths, RunnerOptions options)
 
     private static void EnsureRunning(Process process)
     {
+        // The game is started by Steam, not by us, so its exit code is not available here.
         if (process.HasExited)
-            throw new InvalidOperationException($"The game exited unexpectedly (exit code {process.ExitCode}).");
+            throw new InvalidOperationException("Игра неожиданно закрылась во время прохода.");
     }
 
     /// <summary>Closes the game and its bootstrapper. Results are already on disk, so a hard stop is safe.</summary>
@@ -224,7 +227,7 @@ public sealed class BenchmarkRunner(GamePaths paths, RunnerOptions options)
             {
                 try
                 {
-                    Log.Info($"Closing {name} (pid {p.Id})");
+                    Log.Info($"Закрываю {name} (pid {p.Id})");
                     p.Kill(entireProcessTree: true);
                     p.WaitForExit(15000);
                 }

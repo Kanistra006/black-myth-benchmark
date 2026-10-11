@@ -24,8 +24,9 @@ public class MiscTests
     [Fact]
     public void Cli_ParsesOptions()
     {
-        var o = CliOptions.Parse(["--only", "gpu", "--game-dir", @"D:\Bench", "--cpu-window", "1600x900", "--keep-settings"]);
+        var o = CliOptions.Parse(["--only", "gpu", "--game-dir", @"D:\Bench", "--cpu-window", "1600x900", "--keep-settings", "-y"]);
 
+        Assert.True(o.NoCountdown);
         Assert.False(o.RunCpu);
         Assert.True(o.RunGpu);
         Assert.Equal(@"D:\Bench", o.GameDir);

@@ -60,7 +60,7 @@ public class ResultsTests
 
         var rows = Report.ReportBuilder.FromPass(pass).Settings.ToDictionary(r => r.Name, r => r.Value);
 
-        Assert.StartsWith("Вкл., средний (игра: Вкл., средний)", rows["Полная трассировка лучей"]);
+        Assert.Equal("Вкл., средний (игра: Вкл., средний)", rows["Полная трассировка лучей"]);
         Assert.Equal("Unreal TSR (игра: Unreal TSR)", rows["Апскейлер"]);
         Assert.Equal("Выкл. (игра: Выкл.)", rows["Генерация кадров"]);
         Assert.Equal("100% → 2560x1440 (игра: 25%)", rows["Масштаб рендера"]);

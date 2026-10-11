@@ -20,6 +20,7 @@ public sealed record SystemInfo(
     string Os,
     string? Motherboard,
     string PowerSource,
+    bool OnBattery,
     string? PowerPlan);
 
 [SupportedOSPlatform("windows")]
@@ -53,6 +54,7 @@ public static class SystemInfoCollector
             Os: $"{Str(os?["Caption"])} {Str(os?["Version"])}".Trim(),
             Motherboard: board is null ? null : $"{Str(board["Manufacturer"])} {Str(board["Product"])}".Trim(),
             PowerSource: CollectPowerSource(),
+            OnBattery: System.Windows.Forms.SystemInformation.PowerStatus.PowerLineStatus == System.Windows.Forms.PowerLineStatus.Offline,
             PowerPlan: CollectPowerPlan());
     }
 
@@ -112,9 +114,9 @@ public static class SystemInfoCollector
         var status = System.Windows.Forms.SystemInformation.PowerStatus;
         return status.PowerLineStatus switch
         {
-            System.Windows.Forms.PowerLineStatus.Online => "AC adapter",
-            System.Windows.Forms.PowerLineStatus.Offline => $"Battery ({status.BatteryLifePercent:P0})",
-            _ => "Unknown",
+            System.Windows.Forms.PowerLineStatus.Online => "от сети",
+            System.Windows.Forms.PowerLineStatus.Offline => $"от батареи ({status.BatteryLifePercent:P0})",
+            _ => "не определено",
         };
     }
 

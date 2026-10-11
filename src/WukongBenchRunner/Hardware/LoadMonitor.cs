@@ -61,7 +61,7 @@ public sealed class LoadMonitor : IDisposable
         }
         catch (Exception e) when (e is InvalidOperationException or UnauthorizedAccessException)
         {
-            Log.Warn($"CPU load counters unavailable: {e.Message}");
+            Log.Warn($"Счётчики загрузки CPU недоступны: {e.Message}");
         }
     }
 

@@ -63,7 +63,7 @@ public sealed class BenchmarkHistoryFile
 
     public static BenchmarkHistoryFile Parse(string json) =>
         JsonSerializer.Deserialize<BenchmarkHistoryFile>(json, Options)
-        ?? throw new InvalidDataException("Benchmark history file is empty.");
+        ?? throw new InvalidDataException("Файл результатов бенчмарка пуст.");
 
     public static BenchmarkHistoryFile Load(string path) => Parse(File.ReadAllText(path));
 }
