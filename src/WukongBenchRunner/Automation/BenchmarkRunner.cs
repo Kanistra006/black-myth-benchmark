@@ -12,7 +12,6 @@ public sealed record RunnerOptions
     public TimeSpan StartTimeout { get; init; } = TimeSpan.FromMinutes(15);
     /// <summary>Max time for the benchmark pass itself (it normally takes about 2.5 minutes).</summary>
     public TimeSpan PassTimeout { get; init; } = TimeSpan.FromMinutes(8);
-    /// <summary>Launch through Steam (recommended) or start the game executable directly.</summary>
     public bool LaunchViaSteam { get; init; } = true;
 }
 
@@ -201,7 +200,6 @@ public sealed class BenchmarkRunner(GamePaths paths, RunnerOptions options)
             }
             catch (Exception e) when (i < 10 && e is IOException or System.Text.Json.JsonException)
             {
-                // File not complete yet.
             }
         }
     }

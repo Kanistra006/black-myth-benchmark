@@ -35,7 +35,6 @@ public enum DisplayMode
     Windowed = 2,
 }
 
-/// <summary>A complete set of graphics settings for one benchmark pass.</summary>
 public sealed record BenchmarkProfile
 {
     public required string Name { get; init; }

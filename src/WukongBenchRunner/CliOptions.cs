@@ -10,7 +10,6 @@ public sealed record CliOptions
     public bool KeepSettings { get; init; }
     public bool NoCountdown { get; init; }
     public bool ShowHelp { get; init; }
-    /// <summary>Window size for the CPU pass; null keeps the profile default.</summary>
     public (int Width, int Height)? CpuWindow { get; init; }
     public bool CpuBorderless { get; init; }
     public int? CpuScale { get; init; }

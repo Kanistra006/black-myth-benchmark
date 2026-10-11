@@ -1,6 +1,5 @@
 namespace WukongBenchRunner;
 
-/// <summary>Timestamped progress output to the console.</summary>
 public static class Log
 {
     private static readonly object Gate = new();

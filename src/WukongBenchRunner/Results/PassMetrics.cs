@@ -1,9 +1,5 @@
 namespace WukongBenchRunner.Results;
 
-/// <summary>
-/// Metrics of one benchmark pass. The first block is reported by the Benchmark Tool itself;
-/// the second is derived from its per-frame records to show which component limited the pass.
-/// </summary>
 public sealed record PassMetrics
 {
     // Reported by the Benchmark Tool.

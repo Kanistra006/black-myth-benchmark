@@ -3,7 +3,6 @@ using static WukongBenchRunner.Automation.NativeMethods;
 
 namespace WukongBenchRunner.Automation;
 
-/// <summary>Horizontal anchor of a UI element in the game's menus.</summary>
 public enum UiAnchor
 {
     /// <summary>Element is attached to the left edge (main menu list).</summary>

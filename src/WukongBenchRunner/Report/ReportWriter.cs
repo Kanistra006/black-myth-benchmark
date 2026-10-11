@@ -13,8 +13,6 @@ public static class ReportWriter
 {
     private static readonly CultureInfo Ru = CultureInfo.GetCultureInfo("ru-RU");
 
-    // ---------- shared table model ----------
-
     private static List<(string Title, List<string[]> Rows)> Sections(BenchmarkReport r)
     {
         var s = r.System;
@@ -66,8 +64,6 @@ public static class ReportWriter
     private static string F(double v, string fmt = "0.#") => v.ToString(fmt, Ru);
     private static string Opt(double? v, string fmt = "0.#") => v is null ? "н/д" : v.Value.ToString(fmt, Ru);
 
-    // ---------- console ----------
-
     public static void WriteConsole(BenchmarkReport r)
     {
         foreach (var (title, rows) in Sections(r))
@@ -105,8 +101,6 @@ public static class ReportWriter
         Console.WriteLine(Line('└', '┴', '┘'));
     }
 
-    // ---------- markdown ----------
-
     public static string ToMarkdown(BenchmarkReport r)
     {
         var sb = new StringBuilder();
@@ -133,8 +127,6 @@ public static class ReportWriter
     }
 
     private static string Escape(string s) => s.Replace("|", "\\|");
-
-    // ---------- json ----------
 
     public static string ToJson(BenchmarkReport r) => JsonSerializer.Serialize(r, new JsonSerializerOptions
     {

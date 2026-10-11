@@ -75,9 +75,7 @@ public sealed class FrameRecord
     public double FrameRate { get; set; }
     public double CPUUsage { get; set; }
     public double GPUUsage { get; set; }
-    /// <summary>Time the CPU (game + render threads) spent on the frame, ms.</summary>
     public double CPUFrameTime { get; set; }
-    /// <summary>Time the GPU spent on the frame, ms.</summary>
     public double GPUFrameTime { get; set; }
     public double VideoMemoryUsage { get; set; }
 }

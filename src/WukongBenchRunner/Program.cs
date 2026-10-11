@@ -42,7 +42,6 @@ static int Run(string[] args)
         cts.Cancel();
     };
 
-    // Keep the PC and display awake while the benchmark runs.
     NativeKeepAwake.Enable();
 
     GamePaths paths;
@@ -79,7 +78,6 @@ static int Run(string[] args)
         Path.Combine("results", started.ToString("yyyy-MM-dd_HH-mm-ss", CultureInfo.InvariantCulture)));
     Directory.CreateDirectory(outputDir);
 
-    // Back up the user's settings; they are restored whatever happens.
     var backup = Path.Combine(outputDir, "GameUserSettings.backup.ini");
     File.Copy(paths.GameUserSettingsIni, backup, overwrite: true);
 

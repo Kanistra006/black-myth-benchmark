@@ -5,7 +5,6 @@ using WukongBenchRunner.Settings;
 
 namespace WukongBenchRunner.Report;
 
-/// <summary>Everything the tool reports after a run; serialised as-is to report.json.</summary>
 public sealed record BenchmarkReport(
     DateTime StartedAt,
     DateTime FinishedAt,
@@ -41,12 +40,10 @@ public static class ReportBuilder
             new("Режим отображения", DisplayName(p.Display)),
             new("Разрешение вывода", $"{outputWidth}x{outputHeight} (игра: {raw.ScreenResolution})"),
             new("Масштаб рендера", $"{p.ResolutionScale}% → {renderW}x{renderH} (игра: {raw.ImageQuality}%)"),
-            // The result file stores the upscaler in a field called "Dlss" (same numbering as SuperResolutionSampling).
             new("Апскейлер", $"{UpscalerName(p.Upscaler)} (игра: {UpscalerName((Upscaler)raw.Dlss)})"),
             new("Пресет качества", $"{QualityName(p.Quality)} (игра: {QualityName((Quality)raw.QualityLevel)})"),
             new("Детализация, тени, текстуры, эффекты, растительность, GI, отражения",
                 $"{QualityName(p.Quality)} (игра: {DetailSummary(raw)})"),
-            // The result file stores the full ray tracing level in "Rtx": 0 = off, 1..3 = Low..Ultra.
             new("Полная трассировка лучей",
                 RtSetting(p.RayTracing, p.RayTracingLevel) + $" (игра: {RtSetting(raw.Rtx > 0, (RayTracingLevel)raw.Rtx)})"),
             new("Генерация кадров", $"{OnOff(p.FrameGeneration)} (игра: {OnOff(raw.InsertFrame == 1)})"),
@@ -70,7 +67,6 @@ public static class ReportBuilder
 
     private static string OnOff(bool on) => on ? "Вкл." : "Выкл.";
 
-    /// <summary>The per-option quality values the game reported; one name if they all match.</summary>
     private static string DetailSummary(Results.BenchmarkHistoryFile raw)
     {
         int[] values = [raw.ViewDistance, raw.AntiAliasing, raw.PostProcessing, raw.ShadowQuality,
@@ -83,7 +79,6 @@ public static class ReportBuilder
 
     private static string RtSetting(bool on, RayTracingLevel level) => on ? $"Вкл., {RtName(level)}" : "Выкл.";
 
-    /// <summary>Parses the game's "8GB" style memory size.</summary>
     internal static double? ParseGb(string? s) =>
         s is not null && double.TryParse(s.Replace("GB", "", StringComparison.OrdinalIgnoreCase).Trim(),
             System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var v)

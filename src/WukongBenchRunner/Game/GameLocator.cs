@@ -3,7 +3,6 @@ using Microsoft.Win32;
 
 namespace WukongBenchRunner.Game;
 
-/// <summary>Finds the Black Myth: Wukong Benchmark Tool installation through Steam.</summary>
 public static partial class GameLocator
 {
     public const int SteamAppId = 3132990;
